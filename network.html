@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="stylesheet.css">
+    <title>CPS706 Assignment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.4/cytoscape.min.js"></script>
+</head>
+
+<header id="header_style">
+    CPS706 Assignment
+</header>
+
+<body>
+    <div class="parent">
+        <div class="child" style="width:55%">
+            <!-- Selecting an algorithm to run -->
+            <p id="para">1. Select an Algorithm</p>
+            <label for="algorithm">Algorithm: </label>
+            <select name="algorithm" id="algorithm">
+                <option value="Dijkstra">Dijkstra</option>
+                <option value="Bellman-Ford">Bellman-Ford</option>
+            </select>
+
+            <!-- Add or remove nodes, and/or change weight of edges -->
+            <p id="para">2. Parameters of the graph</p>
+            <!-- Change Weight of edge -->
+            <label for="node1">Node: </label>
+            <select name="node1" id="node1">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+                <option value="4">E</option>
+                <option value="5">F</option>
+                <option value="6">G</option>
+            </select>
+            <label for="node2"> to Node: </label>
+            <select name="node2" id="node2">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+                <option value="4">E</option>
+                <option value="5">F</option>
+                <option value="6">G</option>
+            </select>
+            <label for="weight"> Weight is: </label>
+            <input id="weight" type="text"></input>
+            <button id="change" type="button">Change Weight</button><br><br>
+
+            <!-- Remove node from graph -->
+            <label for="rem">Remove Node: </label>
+            <select name="rem" id="rem">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+                <option value="4">E</option>
+                <option value="5">F</option>
+                <option value="6">G</option>
+            </select>
+            <button id="removeNode" type="button">Remove node</button><br> <br>
+
+            <!-- Add node to graph -->
+            <label for="addNode">Add Node:</label>
+            <button id="addNode" type="button">Add Node</button>
+
+            <!-- Select source and destination nodes -->
+            <p id="para">3. Select Source and Destination</p>
+            <label for="source">Source: </label>
+            <select name="source" id="source">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+                <option value="4">E</option>
+                <option value="5">F</option>
+                <option value="6">G</option>
+            </select>
+            <label for="dest">Destination: </label>
+            <select name="dest" id="dest">
+                <option value="0">A</option>
+                <option value="1">B</option>
+                <option value="2">C</option>
+                <option value="3">D</option>
+                <option value="4">E</option>
+                <option value="5">F</option>
+                <option value="6">G</option>
+            </select>
+
+            <!-- Output the shortest distance from source to destination -->
+            <button id="findStoD" onclick="pathCalc()" type="button">Calculate Path</button><br>
+
+            <div class="child" style="padding:0px 2.5rem 0px 0px">
+                <!-- Where the matrix outputs -->
+                <p id="para">Adjacency Matrix:</p>
+                <div id="matrix" name="matrix"></div>
+            </div>
+            <div class="child" style="padding:0px 2.5rem 0px 0px">
+                <!-- Where result of pathCal() prints -->
+                <div id="print" name="print"></div>
+            </div>
+        </div>
+        <div class="child" style="width:39%">
+            <!-- Where the graph prints -->
+            <div id="cy"></div>
+            <!-- Make graph button -->
+            <button id="cytext" type="button" onclick="makeGraph()">Make Graph</button>
+        </div>
+    </div>
+
+    <script>
+        // Defining a set of letters to display on the graph
+        const alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+        // Create a cytoscape object which is the graph
+        var cy = cytoscape({
+            container: document.getElementById('cy'),
+            style: fetch('cy-style.json').then(function (res) {
+                return res.json();
+            }),
+            elements: []
+        });
+
+        // Default matrix
+        var matrixDefault = [
+            // A, B, C, D, E, F, G    
+            // 0, 1, 2, 3, 4, 5, 6 
+            [0, 2, 0, 3, 0, 0, 0], //A
+            [2, 0, 4, 0, 9, 0, 0], //B
+            [0, 4, 0, 0, 0, 7, 0], //C
+            [3, 0, 0, 0, 4, 0, 0], //D
+            [0, 9, 0, 4, 0, 1, 3], //E
+            [0, 0, 7, 0, 1, 0, 5], //F
+            [0, 0, 0, 0, 3, 5, 0]  //G
+        ];
+
+        // Function to create the graph
+        function makeGraph() {
+            // Define a list of emtpy nodes and elements
+            var nodes = [];
+            var edges = [];
+
+            // Remove all elements already in the graph to recreate
+            cy.elements().remove();
+
+            // Add nodes to the graph from the adjacency matrix
+            for (let i = 0; i < matrixDefault.length; i++) {
+                // Add a node to the cytoscape graph
+                cy.add({ data: { group: 'nodes', label: alpha[i], id: alpha[i] } });
+                // Center the node in the graph box
+                cy.center(i);
+            }
+
+            // Add edges between the nodes
+            for (let i = 0; i < matrixDefault.length; i++) {
+                for (let j = 0; j < matrixDefault[i].length; j++) {
+                    // Create the name of the edge
+                    let text1 = alpha[i].toString();
+                    let text2 = alpha[j].toString();
+                    let name = text1.concat(text2);
+
+                    // If the element is greater than 0, means theres an edge there so create it
+                    if (matrixDefault[i][j] > 0) {
+                        /*  
+                            If j is not equal to the previous i you still have to create the edge
+                            since if j is equal to the previous i, you already went through that
+                            array and created the edges
+                        */
+                        if (j != (i - 1)) {
+                            // Add an edge to the cytoscape graph
+                            cy.add({ data: { group: 'edges', label: matrixDefault[i][j].toString(), id: name, source: alpha[i], target: alpha[j] } });
+                        }
+                    }
+                }
+            }
+            // Create a layout for the graph to organize it
+            var layout = cy.layout({
+                name: 'circle'
+            });
+            layout.run();
+        }
+
+        // Print the matrix
+        document.getElementById("matrix").innerHTML = matrixDefault.map(row => row.join(", ")).join("<br>");
+
+        // Execute the change weight option
+        document.getElementById("change").addEventListener("click", function () {
+            // Get values of the nodes and weight of edge between them
+            var node1 = document.getElementById("node1").value;
+            var node2 = document.getElementById("node2").value;
+            var weight = document.getElementById("weight").value;
+
+            // If the nodes are not the same and the weight is valid
+            if (node1 != node2 && weight >= 0) {
+                // Update adjacency matrix
+                matrixDefault[node1][node2] = weight;
+                matrixDefault[node2][node1] = weight;
+                // Re-print the matrix
+                document.getElementById("matrix").innerHTML = matrixDefault.map(row => row.join(", ")).join("<br>");
+            }
+        });
+
+        // Execute the remove node option
+        document.getElementById("removeNode").addEventListener("click", function () {
+            // Get the node to remove
+            var node = document.getElementById("rem").value;
+
+            // Remove node from matrix (by rows)
+            matrixDefault.splice(node, 1);
+            // Remove node from matrix (by columns)
+            for (let i = 0; i < matrixDefault.length; i++) {
+                matrixDefault[i].splice(node, 1);
+            }
+            // Re-print the matrix
+            document.getElementById("matrix").innerHTML = matrixDefault.map(row => row.join(", ")).join("<br>");
+
+            // Update each of the dropdown options by removing the node you removed
+            var selectElement = document.getElementById("node1");
+            selectElement.remove(selectElement.options.length - 1);
+            selectElement = document.getElementById("node2");
+            selectElement.remove(selectElement.options.length - 1);
+            selectElement = document.getElementById("rem");
+            selectElement.remove(selectElement.options.length - 1);
+            selectElement = document.getElementById("source");
+            selectElement.remove(selectElement.options.length - 1);
+            selectElement = document.getElementById("dest");
+            selectElement.remove(selectElement.options.length - 1);
+        });
+
+        // Execute the add node option
+        document.getElementById("addNode").addEventListener("click", function () {
+            if (document.getElementById("source").options.length < 26) {
+                selectElement = document.getElementById("source");
+                var last = selectElement.options.length;
+                var textadd = alpha[last];
+
+                // Update each of the dropdown options by adding the node you want to add
+                var newOption = document.createElement("option");
+                newOption.value = last;
+                newOption.text = textadd;
+                selectElement1 = document.getElementById("node1");
+                selectElement1.add(newOption);
+
+                var newOption = document.createElement("option");
+                newOption.value = last;
+                newOption.text = textadd;
+                selectElement2 = document.getElementById("node2");
+                selectElement2.add(newOption);
+
+                var newOption = document.createElement("option");
+                newOption.value = last;
+                newOption.text = textadd;
+                selectElement3 = document.getElementById("rem");
+                selectElement3.add(newOption);
+
+                var newOption = document.createElement("option");
+                newOption.value = last;
+                newOption.text = textadd;
+                selectElement4 = document.getElementById("source");
+                selectElement4.add(newOption);
+
+                var newOption = document.createElement("option");
+                newOption.value = last;
+                newOption.text = textadd;
+                selectElement5 = document.getElementById("dest");
+                selectElement5.add(newOption);
+
+                // Add node to matrix (by rows)
+                matrixDefault.push(new Array(matrixDefault[0].length).fill(0));
+                // Add node to matrix (by rows)
+                for (var i = 0; i < matrixDefault.length; i++) {
+                    matrixDefault[i].push(0);
+                }
+            }
+            // Re-print the matrix
+            document.getElementById("matrix").innerHTML = matrixDefault.map(row => row.join(", ")).join("<br>");
+        });
+
+        // Dijkstra's Algorithm
+        function dijkstra(matrix, source) {
+            // Create an array to track which nodes have been visited. Initially all nodes are unvisited (0).
+            var visited = new Array(matrix.length).fill(0);
+            // Create one array for cost to each node and another for path to each node
+            var distance = []; var path = [];
+            
+            // Initialize the distance and path arrays based on the matrix
+            for (var i = 0; i < matrix.length; i++) {
+                if (source == i) { 
+                    // If the current node is the source node, set its distance to 0 and its path to itself.
+                    distance[i] = 0; path[i] = [source];
+                } else if (matrix[source][i] == 0) {
+                    // If there is no direct edge from the source node to the current node, set its distance to Infinity and its path to an empty array.
+                    distance[i] = Infinity; path[i] = [];
+                } else {
+                    // If there is a direct edge from the source node to the current node, set its distance to the weight of the edge and its path to [source, i].
+                    distance[i] = matrix[source][i]; path[i] = [source, i];
+                }
+            }
+            
+            // Loop through all nodes to find the shortest path to each node.
+            for (var i = 0; i < matrix.length; i++) {
+                // Find the unvisited node with the smallest distance from the source node.
+                var minDistance = Infinity;
+                var index = -1;
+                for (var j = 0; j < matrix.length; j++) {
+                    if (visited[j] == 0 && distance[j] < minDistance) {
+                        minDistance = distance[j];
+                        index = j;
+                    }
+                }
+
+                visited[index] = 1; // Mark the selected node as visited.
+            
+                // Update the distance and path arrays for all nodes adjacent to the selected node.
+                for (var j = 0; j < matrix.length; j++) {
+                    if (index > -1 && index != Infinity && matrix[index][j] != 0) {
+                            // Calculate the updated distance to the adjacent node.
+                        var update = +distance[index] + +matrix[index][j];
+                        // If the updated distance is smaller than the current distance, update the distance and path arrays for the adjacent node.
+                        if (update < distance[j]) {
+                            distance[j] = update;
+                            path[j] = path[index].concat(j);
+                        }
+                    }
+                }
+            }
+            
+            // Return the final distance and path arrays.
+            return [distance, path];
+        }
+
+        function bellman(matrix, source) {
+            // Distance vector which is updated based on prevoiusMatrix/DV 
+            var DistanceVector = JSON.parse(JSON.stringify(matrix));
+
+            // All nodes are notified of their neighbouring nodes 
+            for (let i = 0; i < matrix.length; i++) {
+                for (let j = 0; j < matrix[0].length; j++) {
+                    // If node is not a neighbour we set it to infinity
+                    if (matrix[i][j] == 0 && i != j) {
+                        DistanceVector[i][j] = Infinity;
+                    }
+                }
+            }
+            // Create an array to keep track of all distance vector tables sent to neighbours
+            var previousMatrix = DistanceVector.slice();
+
+            // To send new local distance vector to neighbors and update their own
+            // Make sure each node has all values of other nodes or the computation hops needed to reach all nodes 
+            for (let x = 0; x < (matrix.length - 1); x++) {
+                // Go through node each row is a node to update its distance vector table based on neigboring one 
+                for (let i = 0; i < (matrix.length); i++) {
+                    // Go through nodes neighbours which is columns
+                    for (let j = 0; j < (matrix[i].length); j++) {
+                        // Check if they are neighbours 
+                        if (i != j && matrix[i][j] != 0) {
+                            // Go through neighbours vector list and compare your own to see which distance is shorter
+                            for (let d = 0; d < matrix[i].length; d++) {
+                                // Nodes current distance       // neigbour to other nodes distance  + neigbour and current node distance
+                                // to other nodes 
+                                // if you find a smaller distance update the DistanceVector 
+                                if (previousMatrix[i][d] > previousMatrix[j][d] + +previousMatrix[i][j]) {
+                                    DistanceVector[i][d] = +DistanceVector[j][d] + +DistanceVector[i][j];
+                                }
+                            }
+                        }
+                    }
+                }
+                // Once all nodes are up to date set the previousmatrix to latest distance vector matrix
+                previousMatrix = DistanceVector.slice();
+            }
+            // Final after all computations return the distance vector of the source node specified
+            return DistanceVector[source];
+        }
+
+        // Printing the information
+        function printTable(array, dest1, source) {
+            var whereToPrint = document.getElementById("print");
+            var path = dijkstra(matrixDefault, source);
+            // Clear the output
+            whereToPrint.innerHTML = "";
+
+            // Get the shortest path that is saved from the source to destination
+            path = path[1][dest1];
+
+            // Print the shortest path distance from given source and destination
+            whereToPrint.innerHTML = whereToPrint.innerHTML + "<p id='para'>Shortest Path from " + alpha[source] + " to " + alpha[dest1] + ":</p>" + "Cost: " + array[dest1] + "<br>";
+
+            // Print the shortest path from source to destination
+            var finalpath = "Path: ";
+            for (var i = 0; i < path.length - 1; i++) {
+                finalpath = finalpath + alpha[path[i]] + " ---> ";
+            }
+            finalpath = finalpath + alpha[path[path.length - 1]];
+            whereToPrint.innerHTML = whereToPrint.innerHTML + finalpath;
+
+            // Output all the distances of the shortest paths from source to all other nodes
+            whereToPrint.innerHTML = whereToPrint.innerHTML + "<p id='para'>Cost From " + alpha[source] + " to other nodes:</p>";
+            for (var i = 0; i < array.length; i++) {
+                whereToPrint.innerHTML = whereToPrint.innerHTML + alpha[i] + " ---> " + array[i] + "<br>";
+            }
+        }
+
+        // Calculate the path
+        function pathCalc() {
+            // Get source and destination nodes
+            var source = document.getElementById("source").value;
+            var dest1 = document.getElementById("dest").value;
+            // Get which algorithm to use
+            var algo = document.getElementById("algorithm").value;
+
+            // Choose which algorithm to use
+            if (algo == "Dijkstra") {
+                // Call Dijkstra and save shortest distance from source to destination in ret
+                var ret = dijkstra(matrixDefault, source);
+                ret = ret[0];
+            } else {
+                // Call Bellman and save shortest distance from source to destination in ret
+                var ret = bellman(matrixDefault, source);
+            }
+            // Call printTable() to output all information
+            printTable(ret, dest1, source);
+        }
+    </script>
+</body>
+
+</html>

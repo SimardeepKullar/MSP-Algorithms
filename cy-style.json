@@ -1,0 +1,26 @@
+[
+    {
+      "selector": "node[label]",
+      "style": {
+        "label": "data(label)"
+      }
+    },
+  
+    {
+      "selector": "edge[label]",
+      "style": {
+        "label": "data(label)",
+        "width": 3,
+        "line-color": "cyan"
+      }
+    },
+  
+    {
+      "selector": ".center-center",
+      "style": {
+        "text-valign": "center",
+        "text-halign": "center",
+        "width": 6
+      }
+    }
+  ]
